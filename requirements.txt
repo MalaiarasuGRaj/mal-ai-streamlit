@@ -1,6 +1,6 @@
-streamlit==1.23.0
-Pillow==10.4.0
-pytesseract==0.3.10
-google-cloud-vision==2.7.2
-PyMuPDF==1.24.0
-reportlab==4.3.0
+streamlit
+Pillow
+pytesseract
+google-cloud-vision
+PyMuPDF
+reportlab
