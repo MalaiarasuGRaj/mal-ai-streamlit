@@ -1,6 +1,6 @@
 streamlit
 Pillow
 pytesseract
-google-cloud-vision
+google-generativeai
 PyMuPDF
 reportlab
