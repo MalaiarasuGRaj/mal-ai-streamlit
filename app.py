@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 # Streamlit Components
 st.title("MAL.AI 🧠🔍")
 st.markdown('<style>h1{color: orange; text-align: center; margin-bottom: 0px;}</style>', unsafe_allow_html=True)
-st.subheader('Smart Learning, Enhanced by AI')
+st.subheader('Smart Learning, Enhanced by AI 🧠📚🤖')
 st.markdown('<style>h3{text-align: center; margin-top: 0;}</style>', unsafe_allow_html=True)
 
 # Streamlit Sidebar for User Input and Profile
