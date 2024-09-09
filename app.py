@@ -4,7 +4,7 @@ import pytesseract
 import io
 import re
 import logging
-import fitz  # PyMuPdf
+import fitz # PyMuPdf
 import google.generativeai as genai
 import time
 from reportlab.lib.pagesizes import letter
@@ -33,66 +33,68 @@ with st.sidebar:
 
     st.markdown("<hr>", unsafe_allow_html=True)
 
-    # Input preferences section
-    st.header("Input your preferences")
+# Input preferences section
+st.header("Input your preferences")
 
-    # Topic input field
-    topic = st.text_input("Topic/Subject:", placeholder="Enter a topic...")
+# Topic input field
+topic = st.text_input("Topic/Subject *", placeholder="Enter a topic...")
 
-    # Familiarity level dropdown with no default selection
-    familiarity = st.selectbox("Familiarity Level:", ["Select...", "Beginner", "Intermediate", "Advanced"])
+# Familiarity level dropdown with no default selection
+familiarity = st.selectbox("Familiarity Level *", ["Select...", "Beginner", "Intermediate", "Advanced"])
 
-    # Learning mode radio button with no default selection
-    learning_mode = st.radio("Learning Mode:", ["Select...", "Lesson", "Quiz"])
+# Learning mode radio button with no default selection
+learning_mode = st.radio("Learning Mode *", ["Select...", "Lesson", "Quiz"])
 
-    # Time available slider with small text box beside it
-    st.markdown("### Time Available (Minutes):")
-    col1, col2 = st.columns([4, 1])
+# Time available slider with small text box beside it
+st.markdown("### Time Available (Minutes) *:")
+col1, col2 = st.columns([4, 1])
 
-    # Initialize state for time if not already initialized
-    if 'time_available' not in st.session_state:
-        st.session_state.time_available = 30  # Default value
+# Initialize state for time if not already initialized
+if 'time_available' not in st.session_state:
+    st.session_state.time_available = 30  # Default value
 
-    # Slider with label hidden
-    with col1:
-        st.session_state.time_available = st.slider(
-            "Time Available Slider",
-            min_value=5,
-            max_value=120,
-            value=st.session_state.time_available,
-            format="%d minutes",
-            key="time_available_slider",
-            label_visibility="collapsed"
-        )
+# Slider with label hidden
+with col1:
+    st.session_state.time_available = st.slider(
+        "Time Available Slider",
+        min_value=5,
+        max_value=120,
+        value=st.session_state.time_available,
+        format="%d minutes",
+        key="time_available_slider",
+        label_visibility="collapsed"
+    )
 
-    # Text input (small box) with label hidden
-    with col2:
-        time_available_text = st.text_input(
-            "Time Available Box",
-            value=str(st.session_state.time_available),
-            max_chars=3,
-            key="time_available_text",
-            label_visibility="collapsed"
-        )
+# Text input (small box) with label hidden
+with col2:
+    time_available_text = st.text_input(
+        "Time Available Box",
+        value=str(st.session_state.time_available),
+        max_chars=3,
+        key="time_available_text",
+        label_visibility="collapsed"
+    )
 
-        # Update session state with text input value
-        if time_available_text:
-            st.session_state.time_available = int(time_available_text)
+    # Update session state with text input value
+    if time_available_text:
+        st.session_state.time_available = int(time_available_text)
 
-    # Check if all required fields are filled
-    if topic and familiarity != "Select..." and learning_mode != "Select..." and st.session_state.time_available:
-        st.success("All required fields are filled!")
-        uploaded_files = st.file_uploader("Upload Reference Material (Optional, PDF)", type=["pdf"],
-                                          accept_multiple_files=True)
-        additional_instructions = st.text_area("Additional Instructions (Optional):")
-    else:
-        st.error("Please fill all the fields to proceed.")
-        uploaded_files = None
-        additional_instructions = None
+# Check if all required fields are filled
+fields_filled = topic and familiarity != "Select..." and learning_mode != "Select..." and st.session_state.time_available
 
-# Button to generate content
-generate_button = st.sidebar.button("Generate Content")
+if fields_filled:
+    st.success("All required fields are filled!")
+    uploaded_files = st.file_uploader("Upload Reference Material (Optional, PDF)", type=["pdf"],
+                                      accept_multiple_files=True)
+    additional_instructions = st.text_area("Additional Instructions (Optional):")
 
+    # Button to generate content
+    generate_button = st.sidebar.button("Generate Content")
+else:
+    st.error("Please fill all the required fields to proceed.")
+    uploaded_files = None
+    additional_instructions = None
+    generate_button = None
 
 # Function to extract text and images from PDF
 def extract_pdf_content(pdf_files):
@@ -126,25 +128,22 @@ def extract_pdf_content(pdf_files):
             logging.error(f"Error extracting PDF content: {e}")
     return combined_text
 
-
 # Function to clean extracted text
 def clean_text(text):
     text = text.lower()
-    text = re.sub(r'\s+', ' ', text)  # Replace multiple spaces with single space
-    text = re.sub(r'[^\x00-\x7F]+', '', text)  # Remove non-ASCII characters
-    text = re.sub(r'[^a-zA-Z0-9\s.,!?]', '', text)  # Keep only letters, numbers, and basic punctuation
+    text = re.sub(r'\s+', ' ', text) # Replace multiple spaces with single space
+    text = re.sub(r'[^\x00-\x7F]+', '', text) # Remove non-ASCII characters
+    text = re.sub(r'[^a-zA-Z0-9\s.,!?]', '', text) # Keep only letters, numbers, and basic punctuation
     return text.strip()
-
 
 # Set up Gemini API key
 api_key = "AIzaSyDIU2KmhMTybjDvsIx6rwDYoicAzHGV3RA"
 genai.configure(api_key=api_key)
 
-
 # Function to generate content using Gemini API
 def generate_content(topic, familiarity, learning_mode, time_available, uploaded_files, additional_instructions):
     if learning_mode == "Lesson":
-        prompt = f"Create a captivating and comprehensive lesson for a {familiarity} level learner on the topic '{topic}', tailored to be completed within {time_available} minutes. Provide rich, detailed notes and explanations that elucidate key concepts, ideas, and relationships, ensuring the learner achieves a deep understanding of the subject matter. Incorporate engaging storytelling, relatable examples, and visual aids to maintain the learner's interest and motivation. To further enhance the learning experience, suggest to 1-2 informative YouTube lectures that offer fresh perspectives and insights. Consider the following additional context: {additional_instructions}. To reinforce the learner's understanding and provide practical experience, recommend 2-3 high-quality, free online courses , as well as 1-2 relevant projects that the learner can complete. These resources should be carefully curated to ensure they are relevant, up-to-date, and align with the learning objectives."
+        prompt = f"Create a captivating and comprehensive lesson for a {familiarity} level learner on the topic '{topic}', tailored to be completed within {time_available} minutes. Provide rich, detailed notes and explanations that elucidate key concepts, ideas, and relationships, ensuring the learner achieves a deep understanding of the subject matter. Incorporate engaging storytelling, relatable examples, and visual aids to maintain the learner's interest and motivation. To further enhance the learning experience, suggest to 1-2 informative YouTube lectures that offer fresh perspectives and insights. Consider the following additional context: {additional_instructions}. To reinforce the learner's understanding and provide practical experience, recommend 2-3 high-quality, free online courses, as well as 1-2 relevant projects that the learner can complete. These resources should be carefully curated to ensure they are relevant, up-to-date, and align with the learning objectives."
     elif learning_mode == "Quiz":
         prompt = f"Create a comprehensive quiz for a {familiarity} level learner on the topic '{topic}', tailored to be completed within {time_available} minutes. Include a mix of multiple-choice questions, true/false questions, and short-answer questions that assess the learner's understanding of key concepts, ideas, and relationships. Provide clear instructions and explanations for each question, and include feedback for correct and incorrect answers. Consider the following additional context: {additional_instructions}. The output should be a self-contained, engaging, and informative quiz that empowers the learner to assess their knowledge and identify areas for improvement."
 
@@ -159,7 +158,6 @@ def generate_content(topic, familiarity, learning_mode, time_available, uploaded
     except Exception as e:
         st.error(f"Failed to generate content: {e}")
         return None
-
 
 # Function to generate PDF from text using reportlab
 def generate_pdf(content):
@@ -202,20 +200,20 @@ if generate_button:
                                additional_instructions)
 
     if content:
-        # Store the content in session state to keep it persistent
-        st.session_state['content'] = content
+        # Store the content in session state to keep it across different Streamlit reruns
+        st.session_state.generated_content = content
+        st.session_state.generated_pdf = generate_pdf(content)
+        st.success("Content generated successfully!")
 
-        # Generate PDF
-        pdf_output = generate_pdf(content)
+# Display generated content and download link
+if 'generated_content' in st.session_state:
+    st.subheader("Generated Content:")
+    st.write(st.session_state.generated_content)
 
-        # Display the generated content
-        st.markdown(content)
-
-        # Show success message after content display
-        st.sidebar.success("Content generated successfully!")
-
-        # Provide a download link for the generated PDF
-        st.sidebar.download_button("Download PDF", pdf_output, file_name="generated_content.pdf",
-                                   mime="application/pdf")
-    else:
-        st.sidebar.error("Failed to generate content.")
+    st.subheader("Download PDF:")
+    pdf_link = st.download_button(
+        label="Download PDF",
+        data=st.session_state.generated_pdf,
+        file_name="{topic}.pdf",
+        mime="application/pdf"
+    )
