@@ -85,14 +85,12 @@ with st.sidebar:
         uploaded_files = st.file_uploader("Upload Reference Material (Optional, PDF)", type=["pdf"],
                                           accept_multiple_files=True)
         additional_instructions = st.text_area("Additional Instructions (Optional):")
+        generate_button = st.button("Generate Content")
     else:
         st.error("Please fill all the fields to proceed.")
         uploaded_files = None
         additional_instructions = None
-
-# Button to generate content
-generate_button = st.sidebar.button("Generate Content")
-
+        generate_button = None
 
 # Function to extract text and images from PDF
 def extract_pdf_content(pdf_files):
