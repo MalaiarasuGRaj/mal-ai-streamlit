@@ -10,18 +10,14 @@ import time
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 
-# Set up logging
 logging.basicConfig(level=logging.INFO)
 
-# Streamlit Components
 st.title("QuiZenius AI 🧠🔍")
 st.markdown('<style>h1{color: orange; text-align: center; margin-bottom: 0px;}</style>', unsafe_allow_html=True)
 st.subheader('Smart Learning, Enhanced by AI 📚🤖')
 st.markdown('<style>h3{text-align: center; margin-top: 0;}</style>', unsafe_allow_html=True)
 
-# Streamlit Sidebar for User Input and Profile
 with st.sidebar:
-    # Add LinkedIn logo and link
     linkedin_url = "https://www.linkedin.com/in/malaiarasu-g-raj-38b695252/"
     github_url = "https://github.com/MalaiarasuGRaj"
 
@@ -33,27 +29,17 @@ with st.sidebar:
 
     st.markdown("<hr>", unsafe_allow_html=True)
 
-    # Input preferences section
     st.header("Input your preferences")
-
-    # Topic input field
     topic = st.text_input("Topic/Subject:", placeholder="Enter a topic...")
-
-    # Familiarity level dropdown with no default selection
     familiarity = st.selectbox("Familiarity Level:", ["Select...", "Beginner", "Intermediate", "Advanced"])
-
-    # Learning mode radio button with no default selection
     learning_mode = st.radio("Learning Mode:", ["Select...", "Lesson", "Quiz"])
 
-    # Time available slider with small text box beside it
     st.markdown("### Time Available (Minutes):")
     col1, col2 = st.columns([4, 1])
 
-    # Initialize state for time if not already initialized
     if 'time_available' not in st.session_state:
-        st.session_state.time_available = 30  # Default value
+        st.session_state.time_available = 30
 
-    # Slider with label hidden
     with col1:
         st.session_state.time_available = st.slider(
             "Time Available Slider",
@@ -65,7 +51,6 @@ with st.sidebar:
             label_visibility="collapsed"
         )
 
-    # Text input (small box) with label hidden
     with col2:
         time_available_text = st.text_input(
             "Time Available Box",
@@ -75,11 +60,9 @@ with st.sidebar:
             label_visibility="collapsed"
         )
 
-        # Update session state with text input value
         if time_available_text:
             st.session_state.time_available = int(time_available_text)
 
-    # Check if all required fields are filled
     if topic and familiarity != "Select..." and learning_mode != "Select..." and st.session_state.time_available:
         st.success("All required fields are filled!")
         uploaded_files = st.file_uploader("Upload Reference Material (Optional, PDF)", type=["pdf"],
@@ -92,7 +75,6 @@ with st.sidebar:
         additional_instructions = None
         generate_button = None
 
-# Function to extract text and images from PDF
 def extract_pdf_content(pdf_files):
     combined_text = ""
     for pdf_file in pdf_files:
@@ -103,7 +85,7 @@ def extract_pdf_content(pdf_files):
 
             for page_num in range(len(doc)):
                 page = doc.load_page(page_num)
-                text += page.get_text()  # Extract text from page
+                text += page.get_text()  
 
                 images = page.get_images(full=True)
                 for img in images:
@@ -113,7 +95,7 @@ def extract_pdf_content(pdf_files):
                     image = Image.open(io.BytesIO(image_bytes))
 
                     try:
-                        image_text += pytesseract.image_to_string(image)  # Extract text from images using Tesseract
+                        image_text += pytesseract.image_to_string(image) 
                     except pytesseract.TesseractNotFoundError as e:
                         logging.error(f"Tesseract not found: {e}")
                     except Exception as e:
@@ -124,22 +106,18 @@ def extract_pdf_content(pdf_files):
             logging.error(f"Error extracting PDF content: {e}")
     return combined_text
 
-
-# Function to clean extracted text
 def clean_text(text):
     text = text.lower()
-    text = re.sub(r'\s+', ' ', text)  # Replace multiple spaces with single space
-    text = re.sub(r'[^\x00-\x7F]+', '', text)  # Remove non-ASCII characters
-    text = re.sub(r'[^a-zA-Z0-9\s.,!?]', '', text)  # Keep only letters, numbers, and basic punctuation
+    text = re.sub(r'\s+', ' ', text)
+    text = re.sub(r'[^\x00-\x7F]+', '', text)
+    text = re.sub(r'[^a-zA-Z0-9\s.,!?]', '', text)
     return text.strip()
 
 
-# Set up Gemini API key
 api_key = "AIzaSyDIU2KmhMTybjDvsIx6rwDYoicAzHGV3RA"
 genai.configure(api_key=api_key)
 
 
-# Function to generate content using Gemini API
 def generate_content(topic, familiarity, learning_mode, time_available, uploaded_files, additional_instructions):
     if learning_mode == "Lesson":
         prompt = f"As an experienced educator, explain the reasoning behind the key concepts of '{topic}' to a {familiarity} level learner. Structure the explanation to ensure clarity within {time_available} minutes. Contextualize the content with real-world examples and guide the learner through the topic using relatable storytelling. Keep the learner motivated by highlighting practical applications. Finally, evaluate the learning process by recommending 2-3 free, high-quality online courses and suggest 1-2 projects for hands-on practice. Incorporate {additional_instructions} to further enhance the experience."
@@ -147,12 +125,10 @@ def generate_content(topic, familiarity, learning_mode, time_available, uploaded
     elif learning_mode == "Quiz":
         prompt = f"As an experienced educator, assess the learner’s understanding of '{topic}' with a quiz designed for a {familiarity} level learner. Include multiple-choice, true/false, and short-answer questions. Provide detailed instructions and context for each question. Evaluate the learner's progress by giving immediate feedback on correct and incorrect answers. Ensure the quiz fits within {time_available} minutes, and integrate {additional_instructions} to make the assessment more tailored and effective."
 
-
     if uploaded_files:
         prompt += f" Use the following content for reference: {uploaded_files}"
 
     try:
-        # Call Gemini API to generate content
         model = genai.GenerativeModel('gemini-1.5-flash')
         response = model.generate_content(prompt)
         return response.text
@@ -160,8 +136,6 @@ def generate_content(topic, familiarity, learning_mode, time_available, uploaded
         st.error(f"Failed to generate content: {e}")
         return None
 
-
-# Function to generate PDF from text using reportlab
 def generate_pdf(content):
     pdf_output = io.BytesIO()
     c = canvas.Canvas(pdf_output, pagesize=letter)
@@ -171,7 +145,6 @@ def generate_pdf(content):
     text_object.setFont("Helvetica", 12)
     text_object.setTextOrigin(40, height - 40)
 
-    # Add text to the PDF
     for line in content.split('\n'):
         text_object.textLine(line)
 
@@ -181,8 +154,6 @@ def generate_pdf(content):
     pdf_output.seek(0)
     return pdf_output
 
-
-# Button click handler
 if generate_button:
     if uploaded_files:
         pdf_files = [file.getvalue() for file in uploaded_files]
@@ -195,19 +166,10 @@ if generate_button:
                                additional_instructions)
 
     if content:
-        # Store the content in session state to keep it persistent
         st.session_state['content'] = content
-
-        # Generate PDF
         pdf_output = generate_pdf(content)
-
-        # Display the generated content
         st.markdown(content)
-
-        # Show success message after content display
         st.sidebar.success("Content generated successfully!")
-
-        # Provide a download link for the generated PDF
         st.sidebar.download_button("Download PDF", pdf_output, file_name="generated_content.pdf",
                                    mime="application/pdf")
     else:
