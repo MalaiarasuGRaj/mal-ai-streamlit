@@ -5,7 +5,7 @@ import io
 import re
 import logging
 import fitz  # PyMuPdf
-import google.generativeai as genai
+import openai
 import time
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
@@ -113,25 +113,33 @@ def clean_text(text):
     text = re.sub(r'[^a-zA-Z0-9\s.,!?]', '', text)
     return text.strip()
 
-
-api_key = "AIzaSyDIU2KmhMTybjDvsIx6rwDYoicAzHGV3RA"
-genai.configure(api_key=api_key)
-
+# Initialize SambaNova client
+client = openai.OpenAI(
+    api_key="55aa93ff-6bcb-4cd0-a0af-8d777bdd7220",
+    base_url="https://api.sambanova.ai/v1",
+)
 
 def generate_content(topic, familiarity, learning_mode, time_available, uploaded_files, additional_instructions):
     if learning_mode == "Lesson":
         prompt = f"As an experienced educator, explain the reasoning behind the key concepts of '{topic}' to a {familiarity} level learner. Structure the explanation to ensure clarity within {time_available} minutes. Contextualize the content with real-world examples and guide the learner through the topic using relatable storytelling. Keep the learner motivated by highlighting practical applications. Finally, evaluate the learning process by recommending 2-3 free, high-quality online courses and suggest 1-2 projects for hands-on practice. Incorporate {additional_instructions} to further enhance the experience."
 
     elif learning_mode == "Quiz":
-        prompt = f"As an experienced educator, assess the learner’s understanding of '{topic}' with a quiz designed for a {familiarity} level learner. Include multiple-choice, true/false, and short-answer questions. Provide detailed instructions and context for each question. Evaluate the learner's progress by giving immediate feedback on correct and incorrect answers. Ensure the quiz fits within {time_available} minutes, and integrate {additional_instructions} to make the assessment more tailored and effective."
+        prompt = f"As an experienced educator, assess the learner's understanding of '{topic}' with a quiz designed for a {familiarity} level learner. Include multiple-choice, true/false, and short-answer questions. Provide detailed instructions and context for each question. Evaluate the learner's progress by giving immediate feedback on correct and incorrect answers. Ensure the quiz fits within {time_available} minutes, and integrate {additional_instructions} to make the assessment more tailored and effective."
 
     if uploaded_files:
         prompt += f" Use the following content for reference: {uploaded_files}"
 
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content(prompt)
-        return response.text
+        response = client.chat.completions.create(
+            model="Meta-Llama-3.3-70B-Instruct",
+            messages=[
+                {"role": "system", "content": "You are an expert educational assistant specialized in creating personalized learning content."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            top_p=0.9
+        )
+        return response.choices[0].message.content
     except Exception as e:
         st.error(f"Failed to generate content: {e}")
         return None
