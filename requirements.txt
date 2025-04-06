@@ -4,3 +4,4 @@ pytesseract
 google-generativeai
 PyMuPDF
 reportlab
+openai
