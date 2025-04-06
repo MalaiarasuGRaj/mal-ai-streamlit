@@ -9,6 +9,7 @@ import openai
 import time
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+import openai
 
 logging.basicConfig(level=logging.INFO)
 
